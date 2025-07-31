@@ -1,6 +1,6 @@
 # Depth Spatial Audio
 
-Hear your surroundings with computer vision. This experimental Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised stereo audio in real-time.
+Hear your surroundings with computer vision. This _experimental_ Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised stereo audio in real-time.
 
 ![Screenshot](./assets/screenshot.png)
 
@@ -18,7 +18,7 @@ Hear your surroundings with computer vision. This experimental Python applicatio
   - green dot that indicates where the audio source is panned
 - Runs locally (no internet connection once the model checkpoint has been downloaded the first time).
 
-> NOTE This proof-of-concept uses simple stereo panning – it already works surprisingly well with AirPods (Pro / Max) and other headphones but does **not** use Apple’s head-tracked spatial audio APIs. You can improve fidelity by implementing an `AudioOutput` that uses a true binaural renderer (e.g. `pyroomacoustics`).
+> NOTE This proof-of-concept uses simple stereo panning – it does **not** use Apple’s head-tracked spatial audio APIs. You can improve fidelity by implementing an `AudioOutput` that uses a true binaural renderer (e.g. `pyroomacoustics`).
 
 ## Installation
 
@@ -84,7 +84,7 @@ depth_spatial_audio/
 
 ## Requirements & Tested Environment
 
-- macOS 14.4 Sonoma on **Apple M2 Pro**
+- macOS 15.5 Sequoia on **Apple M1**
 - Python 3.11
 - PyTorch 2.3.0 (Metal / MPS backend)
 - OpenCV 4.10.0
