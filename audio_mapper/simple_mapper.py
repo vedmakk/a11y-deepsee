@@ -53,7 +53,7 @@ class SimpleDepthToAudioMapper(DepthToAudioMapper):
                 # "Depth" is inverse → larger number = nearer. We take *max* to get the
                 # pixel that is physically closest inside this grid cell.
                 closest = float(cell.max())
-                print(closest)
+
                 if closest > self.max_depth or closest < self.min_depth:
                     continue  # ignore far-away things
 
