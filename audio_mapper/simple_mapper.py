@@ -50,18 +50,23 @@ class SimpleDepthToAudioMapper(DepthToAudioMapper):
                 if cell.size == 0:
                     continue
 
-                closest = float(cell.min())
-                if closest > self.max_depth:
+                # "Depth" is inverse → larger number = nearer. We take *max* to get the
+                # pixel that is physically closest inside this grid cell.
+                closest = float(cell.max())
+                print(closest)
+                if closest > self.max_depth or closest < self.min_depth:
                     continue  # ignore far-away things
 
-                # Amplitude 0..1 (1 = touch close, 0 = just within `max_depth`)
+                # Depth-Anything V2 produces *inverse* depth where LARGER values mean CLOSER.
+                # We therefore map amplitude proportional to the *normalised* depth value so
+                # that nearby objects are louder.
                 clipped = np.clip(closest, self.min_depth, self.max_depth)
-                amp = 1.0 - (clipped - self.min_depth) / (self.max_depth - self.min_depth)
-                if amp < 0.05:  # simple threshold to reduce noise
-                    continue
+                amp = (clipped - self.min_depth) / (self.max_depth - self.min_depth)  # 0..1
+                if amp < 0.05:
+                    continue  # ignore very faint sources
 
-                azimuth = (gx + 0.5) / self.grid_size * 2.0 - 1.0  # −1..1
-                freq = self.base_freq + (1.0 - amp) * self.freq_span
+                azimuth = (gx + 0.5) / self.grid_size * 2.0 - 1.0  # −1..1 (left .. right)
+                freq = self.base_freq + (1.0 - amp) * self.freq_span  # far = higher pitch
                 sources.append((azimuth, amp, freq))
 
         return sources
