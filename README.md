@@ -2,6 +2,8 @@
 
 Hear your surroundings with computer vision. This experimental Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised stereo audio in real-time.
 
+![Screenshot](./assets/screenshot.png)
+
 ## Features
 
 - Live camera feed → depth map using state-of-the-art Depth Anything V2 (runs on Apple M-series GPU).
