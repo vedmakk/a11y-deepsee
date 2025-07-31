@@ -12,7 +12,7 @@ from audio_output import StereoAudioOutput
 def colorize(depth: np.ndarray) -> np.ndarray:
     """Convert a single-channel depth map to a colour image."""
     depth_norm = (depth - depth.min()) / (depth.max() - depth.min() + 1e-6)
-    cmap = matplotlib.colormaps.get_cmap("Spectral_r")
+    cmap = matplotlib.colormaps.get_cmap("Spectral")
     colored = (cmap(depth_norm)[:, :, :3] * 255).astype(np.uint8)
     return colored
 
