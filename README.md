@@ -1,6 +1,6 @@
 # Depth Spatial Audio
 
-Hear your surroundings with computer vision. This _experimental_ Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised stereo audio in real-time.
+Hear your surroundings with computer vision. This _experimental_ Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised 3d audio in real-time.
 
 ![Screenshot](./assets/screenshot.png)
 Left: Camera feed, Right: Depth map, Green dots: Current audio sources (audible 3D soundscape)
@@ -16,7 +16,7 @@ Left: Camera feed, Right: Depth map, Green dots: Current audio sources (audible 
 - Simple OpenCV UI that shows:
   - raw RGB feed
   - colour-coded depth map
-  - green dot that indicates where the audio source is panned
+  - green dot matrix that indicates where the audio source is panned
 - Runs locally (no internet connection once the model checkpoint has been downloaded the first time).
 
 > NOTE The default OpenAL backend already renders a basic 3-D scene. You can plug in an even more advanced HRTF renderer by implementing a custom `AudioOutput` (e.g. using `pyroomacoustics`).
@@ -41,19 +41,20 @@ Left: Camera feed, Right: Depth map, Green dots: Current audio sources (audible 
    ```bash
    pip install -r requirements.txt
 
-   # macOS – install OpenAL Soft (Windows/Linux users install equivalent):
+   # install OpenAL Soft (macOS):
    brew install openal-soft
 
    # Add OpenAL Soft to the library path
-   # in the current terminal session
+   # current terminal session only
    export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib"
-   # or permanently:
-   echo 'export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_FALLBACK_LIBRARY_PATH"' >> ~/.zprofile   # zsh (default on macOS)
-   # or:
-   echo 'export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_FALLBACK_LIBRARY_PATH"' >> ~/.bash_profile   # for bash
+
+   # or permanently (zsh default on macOS):
+   echo 'export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_FALLBACK_LIBRARY_PATH"' >> ~/.zprofile
+   # or (bash):
+   echo 'export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_FALLBACK_LIBRARY_PATH"' >> ~/.bash_profile
    ```
 
-   The first run will download the Depth Anything V2 checkpoint (~250 MB) from the HuggingFace Hub.
+   The first run will download the Depth Anything V2 checkpoint (~100 MB) from the HuggingFace Hub.
 
 ## Usage
 
@@ -72,7 +73,7 @@ Useful flags:
 
 `audio_mapper/simple_mapper.py` and `audio_mapper/true3d_mapper.py` expose several knobs:
 
-- `inverse` – **NEW** Set to _True_ if the depth map is _inverse_ (larger = closer, default). \
+- `inverse` – Set to _True_ if the depth map is _inverse_ (larger = closer, default). \
   For _metric_ depth (smaller = closer) such as the `Depth-Anything-V2-Metric-*` checkpoints, set it to _False_.
 - `grid_size` – resolution of the grid that is sampled
 - `min_depth` / `max_depth` – depth range in metres that should produce sound
