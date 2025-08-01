@@ -82,15 +82,19 @@ def run(camera_index: int, device: str | None, output_backend: str) -> None:  # 
             depth_vis = colorize(depth, inverse=inverse_depth)
             combined = np.hstack([frame, depth_vis])
 
+            # Width of a single frame (left = RGB, right = Depth)
+            frame_width = frame.shape[1]
+
             if debug_stereo:
                 for azimuth, amp, _ in sources:
-                    x = int((azimuth + 1) / 2 * combined.shape[1])
+                    # Map azimuth −1..1 → depth image X coordinate only (right half)
+                    x = frame_width + int((azimuth + 1) / 2 * frame_width)
                     y = combined.shape[0] // 2
                     cv2.circle(combined, (x, y), radius=10, color=(0, 255, 0), thickness=-1)
             else:
                 for x3d, y3d, z3d, gain, _ in sources:
-                    # Map X/Y from −1..1 → screen space
-                    x = int((x3d + 1) / 2 * combined.shape[1])
+                    # Map X/Y from −1..1 → depth image screen space (right half)
+                    x = frame_width + int((x3d + 1) / 2 * frame_width)
                     y = int((1 - y3d) / 2 * combined.shape[0])
                     cv2.circle(combined, (x, y), radius=8, color=(0, 255, 0), thickness=-1)
 
