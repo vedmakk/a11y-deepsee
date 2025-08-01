@@ -1,9 +1,11 @@
-# Depth Spatial Audio
+# a11y-deepsee
 
-Hear your surroundings with computer vision. This _experimental_ Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised 3d audio in real-time.
+Hear your surroundings with computer vision and depth spatial audio. This _experimental_ Python application captures live video from the built-in camera on macOS (Apple Silicon), estimates depth with Depth Anything V2 and converts the depth map into spatialised 3d audio in real-time.
+
+Read more in [this blog post](https://medium.com/@jan.mittelman/seeing-with-your-ear-a-humble-experiment-in-ai-depth-and-spatial-sound-08271701f336).
 
 ![Screenshot](./assets/screenshot.png)
-Left: Camera feed, Right: Depth map, Green dots: Current audio sources (audible 3D soundscape)
+Left: Live camera feed  | Right: AI-generated depth map  | Green dots: Active audio sources in the 3D soundscape
 
 ## Features
 
@@ -113,4 +115,4 @@ Other Apple Silicon models should work. Intel Macs are untested. Windows / Linux
 
 ---
 
-Have fun exploring your surroundings _by ear_! PRs improving the depth-to-audio mapping or adding proper HRTF support are very welcome.
+Have fun exploring your surroundings _by ear_! PRs improving the depth-to-audio mapping or adding proper sounds are very welcome.
