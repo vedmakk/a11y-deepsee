@@ -27,17 +27,26 @@ class Grid3DDepthMapper(DepthToAudioMapper):
         self,
         grid_size: int = 20,
         min_depth: float = 0.0,
-        max_depth: float = 5.0,
+        max_depth: float = 1.0,
         base_freq: float = 440.0,
         freq_span: float = 880.0,
-        depth_scale: float = 5.0,  # How far (in OpenAL units) *max_depth* is away from the listener
+        depth_scale: float = 1.0,  # How far (in OpenAL units) *max_depth* is away from the listener
+        inverse: bool = True,
     ) -> None:
+        """
+        Parameters
+        ----------
+        inverse:
+            Whether the incoming depth map is *inverse* (larger = closer). Set to
+            *False* for metric depth maps where smaller values indicate closer objects.
+        """
         self.grid_size = grid_size
         self.min_depth = min_depth
         self.max_depth = max_depth
         self.base_freq = base_freq
         self.freq_span = freq_span
         self.depth_scale = depth_scale
+        self.inverse = inverse
 
     # ------------------------------------------------------------------
     # DepthToAudioMapper interface
@@ -57,16 +66,18 @@ class Grid3DDepthMapper(DepthToAudioMapper):
                 if cell.size == 0:
                     continue
 
-                # Depth-Anything V2 yields *inverse* depth (bigger ⇒ closer).  Picking the maximum
-                # thus gives us the physically closest pixel inside the cell.
-                closest = float(cell.max())
+                # Determine the pixel that is physically closest inside this grid cell.
+                closest = float(cell.max()) if self.inverse else float(cell.min())
 
                 if closest > self.max_depth or closest < self.min_depth:
                     continue  # outside the user-defined range
 
                 # Normalise depth to 0‥1 where 1 = at *min_depth* (closest), 0 = at *max_depth*.
                 clipped = np.clip(closest, self.min_depth, self.max_depth)
-                closeness = (clipped - self.min_depth) / (self.max_depth - self.min_depth)
+                if self.inverse:
+                    closeness = (clipped - self.min_depth) / (self.max_depth - self.min_depth)
+                else:
+                    closeness = (self.max_depth - clipped) / (self.max_depth - self.min_depth)
                 if closeness < 0.05:
                     continue  # ignore very faint sources
 

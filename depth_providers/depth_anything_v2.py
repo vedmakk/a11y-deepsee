@@ -20,7 +20,8 @@ from transformers import AutoImageProcessor, AutoModelForDepthEstimation
 from .base import DepthProvider
 
 
-_DEFAULT_MODEL_ID: Final[str] = "depth-anything/Depth-Anything-V2-Small-hf"
+# _DEFAULT_MODEL_ID: Final[str] = "depth-anything/Depth-Anything-V2-Small-hf"
+_DEFAULT_MODEL_ID: Final[str] = "depth-anything/Depth-Anything-V2-Metric-Indoor-Small-hf"
 
 
 class DepthAnythingV2Provider(DepthProvider):

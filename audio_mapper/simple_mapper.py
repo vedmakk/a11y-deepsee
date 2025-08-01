@@ -22,15 +22,26 @@ class SimpleDepthToAudioMapper(DepthToAudioMapper):
         self,
         grid_size: int = 10,
         min_depth: float = 0.0,
-        max_depth: float = 5.0,
+        max_depth: float = 1.0,
         base_freq: float = 440.0,
         freq_span: float = 880.0,
+        inverse: bool = True,
     ) -> None:
+        """Create a simple grid-based depth→audio mapper.
+
+        Parameters
+        ----------
+        inverse:
+            If *True* (default) the incoming depth map is assumed to be **inverse**
+            (larger values = closer).  Set this to *False* for *metric* depth maps
+            where **smaller** numbers mean closer objects.
+        """
         self.grid_size = grid_size
         self.min_depth = min_depth
         self.max_depth = max_depth
         self.base_freq = base_freq
         self.freq_span = freq_span
+        self.inverse = inverse
 
     # ------------------------------------------------------------------
     # Public API
@@ -50,9 +61,8 @@ class SimpleDepthToAudioMapper(DepthToAudioMapper):
                 if cell.size == 0:
                     continue
 
-                # "Depth" is inverse → larger number = nearer. We take *max* to get the
-                # pixel that is physically closest inside this grid cell.
-                closest = float(cell.max())
+                # Determine the pixel that is physically closest inside this grid cell.
+                closest = float(cell.max()) if self.inverse else float(cell.min())
 
                 if closest > self.max_depth or closest < self.min_depth:
                     continue  # ignore far-away things
@@ -61,7 +71,10 @@ class SimpleDepthToAudioMapper(DepthToAudioMapper):
                 # We therefore map amplitude proportional to the *normalised* depth value so
                 # that nearby objects are louder.
                 clipped = np.clip(closest, self.min_depth, self.max_depth)
-                amp = (clipped - self.min_depth) / (self.max_depth - self.min_depth)  # 0..1
+                if self.inverse:
+                    amp = (clipped - self.min_depth) / (self.max_depth - self.min_depth)
+                else:
+                    amp = (self.max_depth - clipped) / (self.max_depth - self.min_depth)
                 if amp < 0.05:
                     continue  # ignore very faint sources
 

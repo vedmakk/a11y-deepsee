@@ -19,10 +19,20 @@ from audio_output import (
 # Helpers
 # -----------------------------------------------------------------------------
 
-def colorize(depth: np.ndarray) -> np.ndarray:
-    """Convert a single-channel depth map to an RGB image for on-screen debugging."""
+def colorize(depth: np.ndarray, inverse: bool = True) -> np.ndarray:
+    """Convert a single-channel depth map to an RGB image for on-screen debugging.
+
+    Parameters
+    ----------
+    inverse:
+        If *True* the depth map is interpreted as **inverse** depth (larger =
+        closer) and the standard *Spectral* colormap is used.  Otherwise the
+        reversed variant *Spectral_r* is chosen so that warmer colours still
+        represent nearer objects.
+    """
     depth_norm = (depth - depth.min()) / (depth.max() - depth.min() + 1e-6)
-    cmap = matplotlib.colormaps.get_cmap("Spectral")
+    cmap_name = "Spectral" if inverse else "Spectral_r"
+    cmap = matplotlib.colormaps.get_cmap(cmap_name)
     colored = (cmap(depth_norm)[:, :, :3] * 255).astype(np.uint8)
     return colored
 
@@ -35,12 +45,18 @@ def run(camera_index: int, device: str | None, output_backend: str) -> None:  # 
     """Capture frames, estimate depth and render spatial audio in real-time."""
     provider = DepthAnythingV2Provider(device=device or None)
 
+    # Heuristic: Depth-Anything *Metric* checkpoints output metric depth (smaller
+    # values = closer).  All other variants output inverse depth.  We use this
+    # information to automatically configure the depth→audio mapper and colour
+    # visualisation.
+    inverse_depth = "metric" not in provider.model_id.lower()
+
     if output_backend == "stereo":
-        mapper = SimpleDepthToAudioMapper()
+        mapper = SimpleDepthToAudioMapper(inverse=inverse_depth)
         audio_out = StereoAudioOutput()
         debug_stereo = True
     else:  # "3d" (default)
-        mapper = Grid3DDepthMapper()
+        mapper = Grid3DDepthMapper(inverse=inverse_depth)
         audio_out = OpenALAudioOutput()
         debug_stereo = False
 
@@ -63,7 +79,7 @@ def run(camera_index: int, device: str | None, output_backend: str) -> None:  # 
             # --------------------------------------------------------------
             # Visualisation – RGB | Depth | Audio debug overlay
             # --------------------------------------------------------------
-            depth_vis = colorize(depth)
+            depth_vis = colorize(depth, inverse=inverse_depth)
             combined = np.hstack([frame, depth_vis])
 
             if debug_stereo:

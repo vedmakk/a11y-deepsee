@@ -69,11 +69,13 @@ Useful flags:
 
 ## Customising the Mapping
 
-`audio_mapper/simple_mapper.py` exposes several knobs:
+`audio_mapper/simple_mapper.py` and `audio_mapper/true3d_mapper.py` expose several knobs:
 
-- `grid_size` resolution of the grid that is sampled
-- `min_depth` / `max_depth` depth range in metres that should produce sound
-- `base_freq` / `freq_span` frequency range (Hz)
+- `inverse` – **NEW** Set to _True_ if the depth map is _inverse_ (larger = closer, default). \
+  For _metric_ depth (smaller = closer) such as the `Depth-Anything-V2-Metric-*` checkpoints, set it to _False_.
+- `grid_size` – resolution of the grid that is sampled
+- `min_depth` / `max_depth` – depth range in metres that should produce sound
+- `base_freq` / `freq_span` – frequency range (Hz)
 
 Feel free to subclass `DepthToAudioMapper` to implement alternative sonifications (e.g. different waveforms, MIDI output, per-pixel granular synthesis, etc.).
 
