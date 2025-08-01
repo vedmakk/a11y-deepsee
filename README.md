@@ -113,6 +113,14 @@ depth_spatial_audio/
 
 Other Apple Silicon models should work. Intel Macs are untested. Windows / Linux users will need to swap the audio backend and maybe adjust the camera index.
 
+## 🤝 Contributing
+
+Have fun exploring your surroundings _by ear_! PRs improving the depth-to-audio mapping or adding proper sounds are very welcome. Just open an issue or submit a pull request.
+
+## 📜 License
+
+MIT — use freely, modify openly, and share widely. See the LICENSE file for details.
+
 ---
 
-Have fun exploring your surroundings _by ear_! PRs improving the depth-to-audio mapping or adding proper sounds are very welcome.
+© 2025 — Jan Mittelman
