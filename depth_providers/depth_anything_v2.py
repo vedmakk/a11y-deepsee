@@ -7,7 +7,7 @@ works out-of-the-box with `pip install transformers`.
 The provider is intentionally lightweight: it loads one of the official
 `*-hf` checkpoints published on the HuggingFace Hub and exposes a simple
 `get_depth(frame)` API that returns a single-channel float32 depth map whose
-smaller values correspond to *closer* objects.
+bigger values correspond to *closer* objects.
 """
 
 from typing import Final

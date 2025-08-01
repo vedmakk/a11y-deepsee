@@ -7,7 +7,7 @@ class DepthProvider(ABC):
 
     @abstractmethod
     def get_depth(self, frame: np.ndarray) -> np.ndarray:  # noqa: D401
-        """Return a depth map (`H×W`, float32) where **smaller** values mean *closer* objects."""
+        """Return a depth map (`H×W`, float32) where **bigger** values mean *closer* objects."""
 
     @property
     @abstractmethod
