@@ -7,7 +7,7 @@ Hear your surroundings with computer vision. This _experimental_ Python applicat
 ## Features
 
 - Live camera feed → depth map using state-of-the-art Depth Anything V2 (runs on Apple M-series GPU).
-- Spatial audio where nearer objects sound louder and their horizontal position is perceived via stereo panning.
+- **True 3-D spatial audio** via OpenAL (default) – objects are positioned in 3-D space (x/y from image, z from depth; nearer ⇒ louder).
 - Modular architecture:
   - `DepthProvider` – swap the depth model.
   - `DepthToAudioMapper` – implement your own mapping from depth to audio sources.
@@ -18,7 +18,7 @@ Hear your surroundings with computer vision. This _experimental_ Python applicat
   - green dot that indicates where the audio source is panned
 - Runs locally (no internet connection once the model checkpoint has been downloaded the first time).
 
-> NOTE This proof-of-concept uses simple stereo panning – it does **not** use Apple’s head-tracked spatial audio APIs. You can improve fidelity by implementing an `AudioOutput` that uses a true binaural renderer (e.g. `pyroomacoustics`).
+> NOTE The default OpenAL backend already renders a basic 3-D scene. You can plug in an even more advanced HRTF renderer by implementing a custom `AudioOutput` (e.g. using `pyroomacoustics`).
 
 ## Installation
 
@@ -39,6 +39,17 @@ Hear your surroundings with computer vision. This _experimental_ Python applicat
 
    ```bash
    pip install -r requirements.txt
+
+   # macOS – install OpenAL Soft (Windows/Linux users install equivalent):
+   brew install openal-soft
+
+   # Add OpenAL Soft to the library path
+   # in the current terminal session
+   export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib"
+   # or permanently:
+   echo 'export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_FALLBACK_LIBRARY_PATH"' >> ~/.zprofile   # zsh (default on macOS)
+   # or:
+   echo 'export DYLD_FALLBACK_LIBRARY_PATH="/opt/homebrew/opt/openal-soft/lib:$DYLD_FALLBACK_LIBRARY_PATH"' >> ~/.bash_profile   # for bash
    ```
 
    The first run will download the Depth Anything V2 checkpoint (~250 MB) from the HuggingFace Hub.
@@ -46,13 +57,15 @@ Hear your surroundings with computer vision. This _experimental_ Python applicat
 ## Usage
 
 ```bash
-python main.py               # press “q” to quit
+python main.py                     # 3-D OpenAL output (default, up to 64 simultaneous voices)
+python main.py --output stereo     # fallback to simple stereo panning
 ```
 
-Optional flags:
+Useful flags:
 
 - `--camera 1` use external camera with index 1
 - `--device cpu` force CPU inference (slow)
+- `--output stereo|3d` choose audio backend
 
 ## Customising the Mapping
 
@@ -74,6 +87,7 @@ depth_spatial_audio/
 ├── audio_output/
 │   ├── base.py
 │   ├── stereo_output.py
+│   ├── openal_output.py
 ├── depth_providers/
 │   ├── base.py
 │   ├── depth_anything_v2.py
@@ -88,7 +102,8 @@ depth_spatial_audio/
 - Python 3.11
 - PyTorch 2.3.0 (Metal / MPS backend)
 - OpenCV 4.10.0
-- sounddevice 0.4.6
+- openal-py ≥ 1.1.0 + system OpenAL Soft
+- sounddevice 0.4.6 (only used with `--output stereo`)
 
 Other Apple Silicon models should work. Intel Macs are untested. Windows / Linux users will need to swap the audio backend and maybe adjust the camera index.
 
