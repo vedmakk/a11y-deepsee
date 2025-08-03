@@ -79,7 +79,7 @@ def setup_audio_system(output_backend: str, inverse_depth: bool, use_natural_sou
             if output_backend == "stereo":
                 mapper = SimpleZoneMapper(
                     zone_config=zone_config,
-                    grid_size=10,
+                    grid_size=8,
                     inverse=inverse_depth
                 )
                 audio_out = StereoZoneOutput(
@@ -91,7 +91,7 @@ def setup_audio_system(output_backend: str, inverse_depth: bool, use_natural_sou
             else:  # "3d" (default)
                 mapper = Grid3DZoneMapper(
                     zone_config=zone_config,
-                    grid_size=20,
+                    grid_size=8,
                     inverse=inverse_depth
                 )
                 audio_out = OpenALZoneOutput(
@@ -114,7 +114,7 @@ def setup_audio_system(output_backend: str, inverse_depth: bool, use_natural_sou
         debug_stereo = True
         print("🔊 Using frequency-based audio with stereo output")
     else:  # "3d" (default)
-        mapper = Grid3DDepthMapper(inverse=inverse_depth)
+        mapper = Grid3DDepthMapper(inverse=inverse_depth, grid_size=8)
         audio_out = OpenALAudioOutput()
         debug_stereo = False
         print("🔊 Using frequency-based audio with 3D spatial output")
@@ -174,8 +174,8 @@ def run(camera_index: int, device: str | None, output_backend: str, use_natural_
                         color = (0, 255, 0)  # Green for frequency-based
                     elif len(source) == 4:  # Zone-based: (azimuth, amp, closeness, zone_id)
                         azimuth, amp, _, zone_id = source
-                        # Different colors for different zones
-                        zone_colors = {"ocean": (255, 0, 0), "wind": (0, 255, 255), "footsteps": (0, 0, 255)}
+                        # Different colors for different zones (BGR format for OpenCV)
+                        zone_colors = {"ocean": (0, 0, 255), "wind": (255, 255, 0), "footsteps": (255, 0, 0)}
                         color = zone_colors.get(zone_id, (0, 255, 0))
                     else:
                         continue
@@ -187,18 +187,17 @@ def run(camera_index: int, device: str | None, output_backend: str, use_natural_
             else:
                 # Handle both frequency-based and zone-based 3D sources
                 for source in sources:
-                    if len(source) == 5:  # Frequency-based: (x3d, y3d, z3d, gain, freq)
-                        x3d, y3d, z3d, gain, _ = source
-                        color = (0, 255, 0)  # Green for frequency-based
-                    elif len(source) == 5:  # Zone-based: (x3d, y3d, z3d, gain, zone_id)
-                        # Need to check if last element is string (zone_id) or float (freq)
+                    if len(source) == 5:
                         x3d, y3d, z3d, gain, last_element = source
+                        
+                        # Check if last element is string (zone_id) or float (freq)
                         if isinstance(last_element, str):  # Zone-based
                             zone_id = last_element
-                            zone_colors = {"ocean": (255, 0, 0), "wind": (0, 255, 255), "footsteps": (0, 0, 255)}
+                            # Different colors for different zones (BGR format for OpenCV)
+                            zone_colors = {"ocean": (0, 0, 255), "wind": (255, 255, 0), "footsteps": (255, 0, 0)}
                             color = zone_colors.get(zone_id, (0, 255, 0))
-                        else:  # Frequency-based
-                            color = (0, 255, 0)
+                        else:  # Frequency-based: last_element is freq
+                            color = (0, 255, 0)  # Green for frequency-based
                     else:
                         continue
                     
