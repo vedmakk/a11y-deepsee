@@ -60,9 +60,23 @@ Left: Live camera feed  | Right: AI-generated depth map  | Green dots: A
 
 ## Usage
 
+### Natural Soundscape System (New!)
+
+The new natural soundscape system uses real WAV files instead of synthetic frequencies for a much more pleasant audio experience:
+
 ```bash
-python main.py                     # 3-D OpenAL output (default, up to 64 simultaneous voices)
-python main.py --output stereo     # fallback to simple stereo panning
+# Natural soundscape with stereo output (requires audio files in audio_samples/)
+python main.py --audio-system natural --output stereo
+
+# Natural soundscape with 3D spatial audio (default)
+python main.py --audio-system natural --output 3d
+```
+
+### Legacy Frequency-Based System
+
+```bash
+python main.py --audio-system frequency                # 3-D OpenAL output with synthetic tones
+python main.py --audio-system frequency --output stereo # Stereo panning with synthetic tones
 ```
 
 Useful flags:
