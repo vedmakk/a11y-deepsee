@@ -47,39 +47,19 @@ class SimpleDepthToAudioMapper(DepthToAudioMapper):
     # Public API
     # ------------------------------------------------------------------
     def map(self, depth_map: np.ndarray) -> List[Source]:  # noqa: D401
-        h, w = depth_map.shape
-        cell_h = max(1, h // self.grid_size)
-        cell_w = max(1, w // self.grid_size)
-
         sources: List[Source] = []
-        for gy in range(self.grid_size):
-            for gx in range(self.grid_size):
-                cell = depth_map[
-                    gy * cell_h : (gy + 1) * cell_h,
-                    gx * cell_w : (gx + 1) * cell_w,
-                ]
-                if cell.size == 0:
-                    continue
-
-                # Determine the pixel that is physically closest inside this grid cell.
-                closest = float(cell.max()) if self.inverse else float(cell.min())
-
-                if closest > self.max_depth or closest < self.min_depth:
-                    continue  # ignore far-away things
-
-                # Depth-Anything V2 produces *inverse* depth where LARGER values mean CLOSER.
-                # We therefore map amplitude proportional to the *normalised* depth value so
-                # that nearby objects are louder.
-                clipped = np.clip(closest, self.min_depth, self.max_depth)
-                if self.inverse:
-                    amp = (clipped - self.min_depth) / (self.max_depth - self.min_depth)
-                else:
-                    amp = (self.max_depth - clipped) / (self.max_depth - self.min_depth)
-                if amp < 0.05:
-                    continue  # ignore very faint sources
-
-                azimuth = (gx + 0.5) / self.grid_size * 2.0 - 1.0  # −1..1 (left .. right)
-                freq = self.base_freq + (1.0 - amp) * self.freq_span  # far = higher pitch
-                sources.append((azimuth, amp, freq))
+        
+        for gx, gy, closeness, freq in self._process_depth_grid(
+            depth_map=depth_map,
+            grid_size=self.grid_size,
+            min_depth=self.min_depth,
+            max_depth=self.max_depth,
+            base_freq=self.base_freq,
+            freq_span=self.freq_span,
+            inverse=self.inverse,
+        ):
+            # Calculate azimuth from grid position
+            azimuth = (gx + 0.5) / self.grid_size * 2.0 - 1.0  # −1..1 (left .. right)
+            sources.append((azimuth, closeness, freq))
 
         return sources

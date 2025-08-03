@@ -52,45 +52,25 @@ class Grid3DDepthMapper(DepthToAudioMapper):
     # DepthToAudioMapper interface
     # ------------------------------------------------------------------
     def map(self, depth_map: np.ndarray) -> List[Source3D]:  # noqa: D401 – keep interface naming
-        h, w = depth_map.shape
-        cell_h = max(1, h // self.grid_size)
-        cell_w = max(1, w // self.grid_size)
-
         sources: List[Source3D] = []
-        for gy in range(self.grid_size):
-            for gx in range(self.grid_size):
-                cell = depth_map[
-                    gy * cell_h : (gy + 1) * cell_h,
-                    gx * cell_w : (gx + 1) * cell_w,
-                ]
-                if cell.size == 0:
-                    continue
+        
+        for gx, gy, closeness, freq in self._process_depth_grid(
+            depth_map=depth_map,
+            grid_size=self.grid_size,
+            min_depth=self.min_depth,
+            max_depth=self.max_depth,
+            base_freq=self.base_freq,
+            freq_span=self.freq_span,
+            inverse=self.inverse,
+        ):
+            # Spatial coordinates (centre of the cell) in normalised units −1‥1
+            x = (gx + 0.5) / self.grid_size * 2.0 - 1.0  # −1 = left, +1 = right
+            y = 1.0 - ((gy + 0.5) / self.grid_size * 2.0)  # +1 = up, −1 = down (flip Y-axis)
 
-                # Determine the pixel that is physically closest inside this grid cell.
-                closest = float(cell.max()) if self.inverse else float(cell.min())
+            # Map physical distance to OpenAL Z axis (negative → in front of the listener)
+            z = -1.0 - (1.0 - closeness) * self.depth_scale
 
-                if closest > self.max_depth or closest < self.min_depth:
-                    continue  # outside the user-defined range
-
-                # Normalise depth to 0‥1 where 1 = at *min_depth* (closest), 0 = at *max_depth*.
-                clipped = np.clip(closest, self.min_depth, self.max_depth)
-                if self.inverse:
-                    closeness = (clipped - self.min_depth) / (self.max_depth - self.min_depth)
-                else:
-                    closeness = (self.max_depth - clipped) / (self.max_depth - self.min_depth)
-                if closeness < 0.05:
-                    continue  # ignore very faint sources
-
-                # Spatial coordinates (centre of the cell) in normalised units −1‥1
-                x = (gx + 0.5) / self.grid_size * 2.0 - 1.0  # −1 = left, +1 = right
-                y = 1.0 - ((gy + 0.5) / self.grid_size * 2.0)  # +1 = up, −1 = down (flip Y-axis)
-
-                # Map physical distance to OpenAL Z axis (negative → in front of the listener)
-                z = -1.0 - (1.0 - closeness) * self.depth_scale
-
-                gain = closeness  # 0‥1 – nearer ⇒ louder
-                freq = self.base_freq + (1.0 - closeness) * self.freq_span
-
-                sources.append((x, y, z, gain, freq))
+            gain = closeness  # 0‥1 – nearer ⇒ louder
+            sources.append((x, y, z, gain, freq))
 
         return sources
