@@ -67,22 +67,27 @@ class SoundZone:
             return 0.0
         
         zone_width = self.max_closeness - self.min_closeness
-        zone_center = (self.min_closeness + self.max_closeness) / 2
-        distance_from_center = abs(closeness - zone_center)
-        max_distance_from_center = zone_width / 2
         
-        # If fade_distance is 0, return full intensity
-        if self.fade_distance <= 0:
+        # If fade_distance is 0 or zone is very narrow, return full intensity
+        if self.fade_distance <= 0 or zone_width <= 1e-10:
             return 1.0
         
-        # Calculate fade based on distance from edges
-        fade_range = min(self.fade_distance * zone_width / 2, max_distance_from_center)
+        # Calculate distance from the nearest edge
+        distance_from_min_edge = closeness - self.min_closeness
+        distance_from_max_edge = self.max_closeness - closeness
+        distance_from_nearest_edge = min(distance_from_min_edge, distance_from_max_edge)
         
-        if distance_from_center <= max_distance_from_center - fade_range:
-            return 1.0  # Full intensity in center
+        # Calculate fade range as a fraction of the zone width
+        fade_range = self.fade_distance * zone_width / 2
+        
+        # If we're far enough from edges, return full intensity
+        if distance_from_nearest_edge >= fade_range:
+            return 1.0
         else:
-            # Fade towards edges
-            fade_factor = (max_distance_from_center - distance_from_center) / fade_range
+            # Fade based on distance from edge
+            if fade_range <= 1e-10:  # Avoid division by zero
+                return 1.0
+            fade_factor = distance_from_nearest_edge / fade_range
             return max(0.0, min(1.0, fade_factor))
 
 
