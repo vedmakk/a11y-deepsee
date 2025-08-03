@@ -113,6 +113,25 @@ depth_spatial_audio/
 
 Other Apple Silicon models should work. Intel Macs are untested. Windows / Linux users will need to swap the audio backend and maybe adjust the camera index.
 
+## Running Tests
+
+This project uses [pytest](https://pytest.org/) for unit testing.
+
+Install the test dependency (inside your activated virtual environment):
+
+```bash
+pip install -r requirements.txt
+pip install pytest
+```
+
+Run the suite from the repository root:
+
+```bash
+pytest
+```
+
+---
+
 ## 🤝 Contributing
 
 Have fun exploring your surroundings _by ear_! PRs improving the depth-to-audio mapping or adding proper sounds are very welcome. Just open an issue or submit a pull request.
