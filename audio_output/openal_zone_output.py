@@ -98,6 +98,7 @@ class OpenALZoneOutput(ZoneAudioOutput3D):
         """
         self.zone_config = zone_config
         self.sample_rate = sample_rate
+        #TODO: This is not used anywhere for now, as we have a global limit
         self.max_sources_per_zone = max_sources_per_zone
         
         # Initialize sample manager
