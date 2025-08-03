@@ -10,7 +10,18 @@ import sounddevice as sd
 
 from .base import ZoneAudioOutput, ZoneSource
 from .sample_manager import SampleManager
-from ..audio_mapper.sound_zones import SoundZoneConfig
+
+# Import sound zones with try/except for flexible importing
+try:
+    from ..audio_mapper.sound_zones import SoundZoneConfig
+except ImportError:
+    try:
+        from audio_mapper.sound_zones import SoundZoneConfig
+    except ImportError:
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from audio_mapper.sound_zones import SoundZoneConfig
 
 
 class ActiveZoneSource:

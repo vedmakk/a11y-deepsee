@@ -9,10 +9,14 @@ This example shows how to:
 You'll need to provide your own WAV files in an 'audio_samples' directory.
 """
 
+import sys
 import time
 from pathlib import Path
 
 import numpy as np
+
+# Add parent directory to path so we can import our modules
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Import the new zone-based classes
 from audio_mapper import (
@@ -23,7 +27,7 @@ from audio_mapper import (
 )
 from audio_output import (
     StereoZoneOutput,
-    # OpenALZoneOutput  # Uncomment if you have OpenAL installed
+    OpenALZoneOutput
 )
 
 
