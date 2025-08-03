@@ -166,17 +166,20 @@ def run(camera_index: int, device: str | None, output_backend: str, use_natural_
             # Width of a single frame (left = RGB, right = Depth)
             frame_width = frame.shape[1]
 
+            # Debug color mapping
+            zone_colors = zone_colors = {"ocean": (255, 0, 0), "wind": (255, 255, 0), "footsteps": (0, 0, 255)}
+            default_color = (0, 255, 0)
+
             if debug_stereo:
                 # Handle both frequency-based and zone-based stereo sources
                 for source in sources:
                     if len(source) == 3:  # Frequency-based: (azimuth, amp, freq)
                         azimuth, amp, _ = source
-                        color = (0, 255, 0)  # Green for frequency-based
+                        color = default_color  # Green for frequency-based
                     elif len(source) == 4:  # Zone-based: (azimuth, amp, closeness, zone_id)
                         azimuth, amp, _, zone_id = source
                         # Different colors for different zones (BGR format for OpenCV)
-                        zone_colors = {"ocean": (0, 0, 255), "wind": (255, 255, 0), "footsteps": (255, 0, 0)}
-                        color = zone_colors.get(zone_id, (0, 255, 0))
+                        color = zone_colors.get(zone_id, default_color)
                     else:
                         continue
                     
@@ -194,10 +197,9 @@ def run(camera_index: int, device: str | None, output_backend: str, use_natural_
                         if isinstance(last_element, str):  # Zone-based
                             zone_id = last_element
                             # Different colors for different zones (BGR format for OpenCV)
-                            zone_colors = {"ocean": (0, 0, 255), "wind": (255, 255, 0), "footsteps": (255, 0, 0)}
-                            color = zone_colors.get(zone_id, (0, 255, 0))
+                            color = zone_colors.get(zone_id, default_color)
                         else:  # Frequency-based: last_element is freq
-                            color = (0, 255, 0)  # Green for frequency-based
+                            color = default_color  # Green for frequency-based
                     else:
                         continue
                     
