@@ -14,11 +14,11 @@ except ImportError:
     # Create dummy classes that raise helpful errors
     class OpenALAudioOutput:
         def __init__(self, *args, **kwargs):
-            raise ImportError("OpenAL not available. Install with: pip install openal")
+            raise ImportError("OpenAL not available. Follow the dependencies installation instructions in the README.md file.")
     
     class OpenALZoneOutput:
         def __init__(self, *args, **kwargs):
-            raise ImportError("OpenAL not available. Install with: pip install openal")
+            raise ImportError("OpenAL not available. Follow the dependencies installation instructions in the README.md file.")
 
 __all__ = [
     # Legacy frequency-based audio outputs

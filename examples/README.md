@@ -41,7 +41,7 @@ Note the overlapping ranges - this creates smooth transitions between zones.
 ### Audio Outputs
 
 - `StereoZoneOutput`: Stereo mixing with panning (works with any audio system)
-- `OpenALZoneOutput`: True 3D spatial audio (requires `pip install openal`)
+- `OpenALZoneOutput`: True 3D spatial audio (requires `openal`)
 
 ### Sample Management
 

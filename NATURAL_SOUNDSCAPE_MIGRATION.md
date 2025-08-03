@@ -54,9 +54,7 @@ This document explains the new natural soundscape system that replaces synthetic
 
 ### 1. Install Dependencies (if using 3D audio)
 
-```bash
-pip install openal  # Optional, only for 3D audio
-```
+Follow the dependencies installation instructions in the README.md file.
 
 ### 2. Prepare Audio Files
 
@@ -285,7 +283,7 @@ This allows gradual migration and A/B testing between systems.
 
 **OpenAL errors**
 
-- Install OpenAL: `pip install openal`
+- Install OpenAL: See README.md (Install the dependencies)
 - Check system audio drivers
 - Try stereo output as alternative
 

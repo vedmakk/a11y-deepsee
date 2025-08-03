@@ -15,7 +15,7 @@ try:
     from openal import oalInit, oalQuit, oalOpen, Listener  # type: ignore
 except ModuleNotFoundError as exc:  # pragma: no cover – optional dependency
     raise ImportError(
-        "PyOpenAL is required for OpenALZoneOutput. Install with `pip install openal`."
+        "PyOpenAL is required for OpenALZoneOutput. Follow the dependencies installation instructions in the README.md file."
     ) from exc
 
 from .base import ZoneAudioOutput3D, ZoneSource3D

@@ -190,7 +190,7 @@ def run_3d_example():
     try:
         from audio_output import OpenALZoneOutput
     except ImportError:
-        print("OpenAL not available. Install with: pip install openal")
+        print("OpenAL not available. Follow the dependencies installation instructions in the README.md file.")
         return
     
     # Create sound zone configuration
@@ -254,7 +254,7 @@ if __name__ == "__main__":
     print("This example demonstrates the new zone-based audio system.")
     print("Choose an option:")
     print("1. Stereo soundscape (works without additional dependencies)")
-    print("2. 3D soundscape (requires OpenAL: pip install openal)")
+    print("2. 3D soundscape (requires OpenAL)")
     print("3. Exit")
     
     while True:
