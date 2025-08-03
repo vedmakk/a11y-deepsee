@@ -39,6 +39,7 @@ class ActiveZoneSource3D:
     
     def __init__(
         self,
+        source_id: str,
         x: float,
         y: float,
         z: float,
@@ -47,6 +48,7 @@ class ActiveZoneSource3D:
         openal_source,
         sample_path: Path
     ):
+        self.source_id = source_id
         self.x = x
         self.y = y
         self.z = z
@@ -54,6 +56,17 @@ class ActiveZoneSource3D:
         self.zone_id = zone_id
         self.openal_source = openal_source
         self.sample_path = sample_path
+        
+    def update(self, x: float, y: float, z: float, amplitude: float):
+        """Update source properties and OpenAL state."""
+        self.x = x
+        self.y = y
+        self.z = z
+        self.amplitude = amplitude
+        
+        # Update OpenAL source properties
+        self.openal_source.set_position([x, y, z])
+        self.openal_source.set_gain(max(0.0, min(1.0, amplitude)))
 
 
 class OpenALZoneOutput(ZoneAudioOutput3D):
@@ -93,7 +106,7 @@ class OpenALZoneOutput(ZoneAudioOutput3D):
         # OpenAL components
         self._listener: Optional[Listener] = None
         self._lock = threading.Lock()
-        self._active_sources: List[ActiveZoneSource3D] = []
+        self._active_sources: Dict[str, ActiveZoneSource3D] = {}
         
         # Cache of temporary WAV files for OpenAL (zone_id -> temp file path)
         self._temp_files: Dict[str, Path] = {}
@@ -166,7 +179,7 @@ class OpenALZoneOutput(ZoneAudioOutput3D):
         """Stop playback and release all OpenAL resources."""
         with self._lock:
             # Stop and destroy all active sources
-            for active_source in self._active_sources:
+            for active_source in self._active_sources.values():
                 try:
                     active_source.openal_source.stop()
                     if hasattr(active_source.openal_source, "destroy"):
@@ -184,50 +197,32 @@ class OpenALZoneOutput(ZoneAudioOutput3D):
     def update_sources(self, sources: List[ZoneSource3D]) -> None:  # noqa: D401
         """Update the currently audible 3D zone-based sources."""
         with self._lock:
-            # Stop and clean up existing sources
-            for active_source in self._active_sources:
-                try:
-                    active_source.openal_source.stop()
-                    if hasattr(active_source.openal_source, "destroy"):
-                        active_source.openal_source.destroy()
-                    elif hasattr(active_source.openal_source, "delete"):
-                        active_source.openal_source.delete()
-                except Exception as e:
-                    print(f"Warning: Error cleaning up OpenAL source: {e}")
-            
-            self._active_sources.clear()
-            
             # Limit total number of sources
             if len(sources) > self.MAX_SOURCES:
                 # Keep the loudest sources
                 sources = sorted(sources, key=lambda s: s[3], reverse=True)[:self.MAX_SOURCES]
             
-            # Group sources by zone and limit per zone
-            zone_sources: Dict[str, List[ZoneSource3D]] = {}
-            for source in sources:
-                zone_id = source[4]
-                if zone_id not in zone_sources:
-                    zone_sources[zone_id] = []
-                zone_sources[zone_id].append(source)
+            # Create set of current source IDs for this frame
+            current_source_ids = set()
             
-            # Create OpenAL sources for each zone
-            for zone_id, zone_source_list in zone_sources.items():
-                # Limit sources per zone
-                if len(zone_source_list) > self.max_sources_per_zone:
-                    zone_source_list = sorted(
-                        zone_source_list, 
-                        key=lambda s: s[3], 
-                        reverse=True
-                    )[:self.max_sources_per_zone]
+            # Update or create sources
+            for x, y, z, amplitude, zone_id in sources:
+                # Create a stable source ID based on zone and approximate position
+                # This ensures sources in similar positions maintain continuity
+                position_key = f"{zone_id}_{int(x * 5):+03d}_{int(y * 5):+03d}_{int(z * 2):+03d}"
+                source_id = position_key
+                current_source_ids.add(source_id)
                 
-                # Get the temp file for this zone
-                temp_file = self._temp_files.get(zone_id)
-                if temp_file is None:
-                    print(f"Warning: No temp file available for zone '{zone_id}'")
-                    continue
-                
-                # Create OpenAL sources for this zone
-                for x, y, z, amplitude, _ in zone_source_list:
+                if source_id in self._active_sources:
+                    # Update existing source properties
+                    self._active_sources[source_id].update(x, y, z, amplitude)
+                else:
+                    # Create new source
+                    temp_file = self._temp_files.get(zone_id)
+                    if temp_file is None:
+                        print(f"Warning: No temp file available for zone '{zone_id}'")
+                        continue
+                    
                     try:
                         # Create OpenAL source
                         openal_source = oalOpen(str(temp_file))
@@ -238,9 +233,23 @@ class OpenALZoneOutput(ZoneAudioOutput3D):
                         
                         # Track the active source
                         active_source = ActiveZoneSource3D(
-                            x, y, z, amplitude, zone_id, openal_source, temp_file
+                            source_id, x, y, z, amplitude, zone_id, openal_source, temp_file
                         )
-                        self._active_sources.append(active_source)
+                        self._active_sources[source_id] = active_source
                         
                     except Exception as e:
                         print(f"Warning: Failed to create OpenAL source for zone '{zone_id}': {e}")
+            
+            # Remove sources that are no longer active
+            sources_to_remove = set(self._active_sources.keys()) - current_source_ids
+            for source_id in sources_to_remove:
+                active_source = self._active_sources[source_id]
+                try:
+                    active_source.openal_source.stop()
+                    if hasattr(active_source.openal_source, "destroy"):
+                        active_source.openal_source.destroy()
+                    elif hasattr(active_source.openal_source, "delete"):
+                        active_source.openal_source.delete()
+                except Exception as e:
+                    print(f"Warning: Error cleaning up OpenAL source {source_id}: {e}")
+                del self._active_sources[source_id]

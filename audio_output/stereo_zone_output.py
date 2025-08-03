@@ -27,12 +27,19 @@ except ImportError:
 class ActiveZoneSource:
     """Represents an active zone-based audio source with playback state."""
     
-    def __init__(self, azimuth: float, amplitude: float, closeness: float, zone_id: str):
+    def __init__(self, source_id: str, azimuth: float, amplitude: float, closeness: float, zone_id: str):
+        self.source_id = source_id  # Unique identifier for tracking across frames
         self.azimuth = azimuth
         self.amplitude = amplitude
         self.closeness = closeness
         self.zone_id = zone_id
         self.playback_position = 0  # Current frame position in the sample
+        
+    def update(self, azimuth: float, amplitude: float, closeness: float):
+        """Update source properties without restarting playback."""
+        self.azimuth = azimuth
+        self.amplitude = amplitude
+        self.closeness = closeness
 
 
 class StereoZoneOutput(ZoneAudioOutput):
@@ -72,8 +79,8 @@ class StereoZoneOutput(ZoneAudioOutput):
         self.sample_manager = SampleManager(target_sample_rate=sample_rate)
         self._load_zone_samples()
         
-        # Track active sources by zone
-        self.active_sources: Dict[str, List[ActiveZoneSource]] = {}
+        # Track active sources by unique source ID
+        self.active_sources: Dict[str, ActiveZoneSource] = {}
         self._lock = threading.Lock()
         
         # Audio stream
@@ -110,22 +117,34 @@ class StereoZoneOutput(ZoneAudioOutput):
     def update_sources(self, sources: List[ZoneSource]) -> None:  # noqa: D401
         """Update the currently audible zone-based sources."""
         with self._lock:
-            # Clear existing sources
-            self.active_sources.clear()
-            
             # Limit number of sources to prevent audio overload
             if len(sources) > self.max_sources:
                 # Keep the loudest sources
                 sources = sorted(sources, key=lambda s: s[1], reverse=True)[:self.max_sources]
             
-            # Group sources by zone
+            # Create set of current source IDs for this frame
+            current_source_ids = set()
+            
+            # Update or create sources
             for azimuth, amplitude, closeness, zone_id in sources:
-                if zone_id not in self.active_sources:
-                    self.active_sources[zone_id] = []
+                # Create a stable source ID based on zone and approximate position
+                # This ensures sources in similar positions maintain continuity
+                position_key = f"{zone_id}_{int(azimuth * 10):+03d}"  # Discretize azimuth to nearest 0.1
+                source_id = position_key
+                current_source_ids.add(source_id)
                 
-                # Create active source
-                active_source = ActiveZoneSource(azimuth, amplitude, closeness, zone_id)
-                self.active_sources[zone_id].append(active_source)
+                if source_id in self.active_sources:
+                    # Update existing source properties
+                    self.active_sources[source_id].update(azimuth, amplitude, closeness)
+                else:
+                    # Create new source
+                    active_source = ActiveZoneSource(source_id, azimuth, amplitude, closeness, zone_id)
+                    self.active_sources[source_id] = active_source
+            
+            # Remove sources that are no longer active
+            sources_to_remove = set(self.active_sources.keys()) - current_source_ids
+            for source_id in sources_to_remove:
+                del self.active_sources[source_id]
 
     def _audio_callback(self, outdata, frames, time, status):  # noqa: D401
         """Audio callback that mixes zone-based samples."""
@@ -136,41 +155,36 @@ class StereoZoneOutput(ZoneAudioOutput):
         buffer = np.zeros((frames, 2), dtype=np.float32)
 
         with self._lock:
-            # Mix audio from each active zone
-            for zone_id, zone_sources in self.active_sources.items():
-                if not zone_sources:
-                    continue
-                
-                # Get the sample for this zone
-                sample = self.sample_manager.get_sample(zone_id)
+            # Mix audio from each active source
+            for source in self.active_sources.values():
+                # Get the sample for this source's zone
+                sample = self.sample_manager.get_sample(source.zone_id)
                 if sample is None:
                     continue
                 
-                # Mix all sources in this zone
-                for source in zone_sources:
-                    # Get audio data from the sample
-                    audio_data = sample.get_samples(source.playback_position, frames)
-                    
-                    # Convert to stereo if needed
-                    if len(audio_data.shape) == 1:  # Mono
-                        audio_data = np.column_stack([audio_data, audio_data])
-                    
-                    # Apply volume based on amplitude
-                    volume = source.amplitude
-                    audio_data *= volume
-                    
-                    # Apply stereo panning based on azimuth
-                    left_gain = (1.0 - source.azimuth) * 0.5
-                    right_gain = (1.0 + source.azimuth) * 0.5
-                    
-                    audio_data[:, 0] *= left_gain   # Left channel
-                    audio_data[:, 1] *= right_gain  # Right channel
-                    
-                    # Add to output buffer
-                    buffer += audio_data
-                    
-                    # Update playback position
-                    source.playback_position += frames
+                # Get audio data from the sample
+                audio_data = sample.get_samples(source.playback_position, frames)
+                
+                # Convert to stereo if needed
+                if len(audio_data.shape) == 1:  # Mono
+                    audio_data = np.column_stack([audio_data, audio_data])
+                
+                # Apply volume based on amplitude
+                volume = source.amplitude
+                audio_data *= volume
+                
+                # Apply stereo panning based on azimuth
+                left_gain = (1.0 - source.azimuth) * 0.5
+                right_gain = (1.0 + source.azimuth) * 0.5
+                
+                audio_data[:, 0] *= left_gain   # Left channel
+                audio_data[:, 1] *= right_gain  # Right channel
+                
+                # Add to output buffer
+                buffer += audio_data
+                
+                # Update playback position for continuous playback
+                source.playback_position += frames
 
         # Prevent clipping
         buffer = np.clip(buffer, -1.0, 1.0)
