@@ -68,23 +68,23 @@ def setup_audio_system(output_backend: str, inverse_depth: bool, use_natural_sou
                     max_closeness=0.4,
                     audio_file=audio_samples_dir / "ocean.wav",
                     base_volume=0.8,
-                    fade_distance=0.2
+                    fade_distance=1
                 ),
                 SoundZone(
                     zone_id="medium",
-                    min_closeness=0.3,
-                    max_closeness=0.7,
+                    min_closeness=0.4,
+                    max_closeness=0.8,
                     audio_file=audio_samples_dir / "wind.wav",
-                    base_volume=0.3,
-                    fade_distance=0.3
+                    base_volume=0.1,
+                    fade_distance=1
                 ),
                 SoundZone(
                     zone_id="close",
-                    min_closeness=0.6,
+                    min_closeness=0.8,
                     max_closeness=1.0,
                     audio_file=audio_samples_dir / "bees.wav",
                     base_volume=1.0,
-                    fade_distance=0.2
+                    fade_distance=1
                 )
             ])
             
