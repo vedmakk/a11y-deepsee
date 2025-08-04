@@ -31,8 +31,8 @@ class Grid3DZoneMapper(DepthToZoneMapper):
         zone_config: SoundZoneConfig,
         grid_size: int = 20,
         min_depth: float = 0.0,
-        max_depth: float = 1.0,
-        depth_scale: float = 1.0,  # How far (in OpenAL units) *max_depth* is away from the listener
+        max_depth: float = 3.0,
+        depth_scale: float = 3.0,  # How far (in OpenAL units) *max_depth* is away from the listener
         inverse: bool = True,
     ) -> None:
         """Create a 3D grid-based depth→zone mapper.

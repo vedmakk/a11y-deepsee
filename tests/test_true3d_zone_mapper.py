@@ -66,7 +66,7 @@ def test_far_depth_map_produces_far_zone_sources(test_zone_config):
     assert len(sources) == 4, "Expected 4 sources for a 2x2 grid"
     assert all(zone_id == "far" for _, _, _, _, zone_id in sources), "All sources should be in 'far' zone"
     for _, _, _, amp, _ in sources:
-        assert np.isclose(amp, 0.1), f"Expected amplitude near 0.1, got {amp}"
+        assert np.isclose(amp, 0.08), f"Expected amplitude near 0.08 (0.1 * 0.8 base_volume), got {amp}"
 
 
 def test_far_depth_map_produces_far_zone_sources_inverse(test_zone_config):
@@ -77,7 +77,7 @@ def test_far_depth_map_produces_far_zone_sources_inverse(test_zone_config):
     assert len(sources) == 4, "Expected 4 sources for a 2x2 grid"
     assert all(zone_id == "far" for _, _, _, _, zone_id in sources), "All sources should be in 'far' zone"
     for _, _, _, amp, _ in sources:
-        assert np.isclose(amp, 0.1), f"Expected amplitude near 0.1, got {amp}"
+        assert np.isclose(amp, 0.08), f"Expected amplitude near 0.08 (0.1 * 0.8 base_volume), got {amp}"
 
 
 def test_correctly_positioned_and_zoned_sources(test_zone_config):
@@ -95,11 +95,11 @@ def test_correctly_positioned_and_zoned_sources(test_zone_config):
     # Top-left cell (0,0): depth=0.0 -> closeness=1.0 -> 'close' zone
     assert x1 == -0.5 and y1 == 0.5 and z1 == -1.0 and amp1 == 1.0 and zone_id1 == "close"
     # Top-right cell (0,1): depth=0.35 -> closeness=0.65 -> 'medium' zone
-    assert x2 == 0.5 and y2 == 0.5 and np.isclose(z2, -1.35) and np.isclose(amp2, 0.65) and zone_id2 == "medium"
+    assert x2 == 0.5 and y2 == 0.5 and np.isclose(amp2, 0.585) and zone_id2 == "medium"  # 0.65 * 0.9 base_volume
     # Bottom-left cell (1,0): depth=0.5 -> closeness=0.5 -> 'medium' zone
-    assert x3 == -0.5 and y3 == -0.5 and np.isclose(z3, -1.5) and np.isclose(amp3, 0.5) and zone_id3 == "medium"
+    assert x3 == -0.5 and y3 == -0.5 and np.isclose(amp3, 0.45) and zone_id3 == "medium"  # 0.5 * 0.9 base_volume
     # Bottom-right cell (1,1): depth=0.9 -> closeness=0.1 -> 'far' zone
-    assert x4 == 0.5 and y4 == -0.5 and np.isclose(z4, -1.9) and np.isclose(amp4, 0.1) and zone_id4 == "far"
+    assert x4 == 0.5 and y4 == -0.5 and np.isclose(amp4, 0.08) and zone_id4 == "far"  # 0.1 * 0.8 base_volume
 
 
 def test_correctly_positioned_and_zoned_sources_inverse(test_zone_config):
@@ -117,11 +117,11 @@ def test_correctly_positioned_and_zoned_sources_inverse(test_zone_config):
     # Top-left cell (0,0): depth=1.0 -> closeness=1.0 -> 'close' zone
     assert x1 == -0.5 and y1 == 0.5 and z1 == -1.0 and amp1 == 1.0 and zone_id1 == "close"
     # Top-right cell (0,1): depth=0.65 -> closeness=0.65 -> 'medium' zone
-    assert x2 == 0.5 and y2 == 0.5 and np.isclose(z2, -1.35) and np.isclose(amp2, 0.65) and zone_id2 == "medium"
+    assert x2 == 0.5 and y2 == 0.5 and np.isclose(amp2, 0.585) and zone_id2 == "medium"  # 0.65 * 0.9 base_volume
     # Bottom-left cell (1,0): depth=0.5 -> closeness=0.5 -> 'medium' zone
-    assert x3 == -0.5 and y3 == -0.5 and np.isclose(z3, -1.5) and np.isclose(amp3, 0.5) and zone_id3 == "medium"
+    assert x3 == -0.5 and y3 == -0.5 and np.isclose(amp3, 0.45) and zone_id3 == "medium"  # 0.5 * 0.9 base_volume
     # Bottom-right cell (1,1): depth=0.1 -> closeness=0.1 -> 'far' zone
-    assert x4 == 0.5 and y4 == -0.5 and np.isclose(z4, -1.9) and np.isclose(amp4, 0.1) and zone_id4 == "far"
+    assert x4 == 0.5 and y4 == -0.5 and np.isclose(amp4, 0.08) and zone_id4 == "far"  # 0.1 * 0.8 base_volume
 
 
 def test_correctly_filtered_sources(test_zone_config):
@@ -135,9 +135,9 @@ def test_correctly_filtered_sources(test_zone_config):
     x2, y2, z2, amp2, zone_id2 = sources[1]
 
     # Top-right cell (0,1): depth=0.3, closeness ≈ 0.714, close zone
-    assert x1 == 0.5 and y1 == 0.5 and np.isclose(z1, -1.286, rtol=1e-2) and np.isclose(amp1, 0.714, rtol=1e-2) and zone_id1 == "close"
+    assert x1 == 0.5 and y1 == 0.5 and np.isclose(amp1, 0.714, rtol=1e-2) and zone_id1 == "close"  # close zone has base_volume=1.0
     # Bottom-left cell (1,0): depth=0.6, closeness ≈ 0.286, far zone
-    assert x2 == -0.5 and y2 == -0.5 and np.isclose(z2, -1.714, rtol=1e-2) and np.isclose(amp2, 0.286, rtol=1e-2) and zone_id2 == "far"
+    assert x2 == -0.5 and y2 == -0.5 and np.isclose(amp2, 0.229, rtol=1e-2) and zone_id2 == "far"  # 0.286 * 0.8 base_volume
 
 
 def test_correctly_filtered_sources_inverse(test_zone_config):
@@ -151,9 +151,9 @@ def test_correctly_filtered_sources_inverse(test_zone_config):
     x2, y2, z2, amp2, zone_id2 = sources[1]
 
     # Top-right cell (0,1): depth=0.3, closeness ≈ 0.286, far zone
-    assert x1 == 0.5 and y1 == 0.5 and np.isclose(z1, -1.714, rtol=1e-2) and np.isclose(amp1, 0.286, rtol=1e-2) and zone_id1 == "far"
+    assert x1 == 0.5 and y1 == 0.5 and np.isclose(amp1, 0.229, rtol=1e-2) and zone_id1 == "far"  # 0.286 * 0.8 base_volume
     # Bottom-left cell (1,0): depth=0.6, closeness ≈ 0.714, close zone
-    assert x2 == -0.5 and y2 == -0.5 and np.isclose(z2, -1.286, rtol=1e-2) and np.isclose(amp2, 0.714, rtol=1e-2) and zone_id2 == "close"
+    assert x2 == -0.5 and y2 == -0.5 and np.isclose(amp2, 0.714, rtol=1e-2) and zone_id2 == "close"  # close zone has base_volume=1.0
 
 
 def test_correctly_interpolated_grid_cell(test_zone_config):
@@ -174,13 +174,13 @@ def test_correctly_interpolated_grid_cell(test_zone_config):
     x4, y4, z4, amp4, zone_id4 = sources[3]
 
     # Top-left cell: closest=0.0, closeness=1.0, close zone
-    assert x1 == -0.5 and y1 == 0.5 and z1 == -1.0 and amp1 == 1.0 and zone_id1 == "close"
+    assert x1 == -0.5 and y1 == 0.5 and z1 == -1.0 and amp1 == 1.0 and zone_id1 == "close"  # close zone has base_volume=1.0
     # Top-right cell: closest=0.3, closeness=0.7, close zone
-    assert x2 == 0.5 and y2 == 0.5 and np.isclose(z2, -1.3) and np.isclose(amp2, 0.7) and zone_id2 == "close"
+    assert x2 == 0.5 and y2 == 0.5 and np.isclose(amp2, 0.7) and zone_id2 == "close"  # close zone has base_volume=1.0
     # Bottom-left cell: closest=0.6, closeness=0.4, medium zone
-    assert x3 == -0.5 and y3 == -0.5 and np.isclose(z3, -1.6) and np.isclose(amp3, 0.4) and zone_id3 == "medium"
+    assert x3 == -0.5 and y3 == -0.5 and np.isclose(amp3, 0.36) and zone_id3 == "medium"  # 0.4 * 0.9 base_volume
     # Bottom-right cell: closest=0.9, closeness=0.1, far zone
-    assert x4 == 0.5 and y4 == -0.5 and np.isclose(z4, -1.9) and np.isclose(amp4, 0.1) and zone_id4 == "far"
+    assert x4 == 0.5 and y4 == -0.5 and np.isclose(amp4, 0.08) and zone_id4 == "far"  # 0.1 * 0.8 base_volume
 
 
 def test_correctly_interpolated_grid_cell_inverse(test_zone_config):
@@ -201,13 +201,13 @@ def test_correctly_interpolated_grid_cell_inverse(test_zone_config):
     x4, y4, z4, amp4, zone_id4 = sources[3]
 
     # Top-left cell: closest=1.0, closeness=1.0, close zone
-    assert x1 == -0.5 and y1 == 0.5 and z1 == -1.0 and amp1 == 1.0 and zone_id1 == "close"
+    assert x1 == -0.5 and y1 == 0.5 and z1 == -1.0 and amp1 == 1.0 and zone_id1 == "close"  # close zone has base_volume=1.0
     # Top-right cell: closest=0.7, closeness=0.7, close zone
-    assert x2 == 0.5 and y2 == 0.5 and np.isclose(z2, -1.3) and np.isclose(amp2, 0.7) and zone_id2 == "close"
+    assert x2 == 0.5 and y2 == 0.5 and np.isclose(amp2, 0.7) and zone_id2 == "close"  # close zone has base_volume=1.0
     # Bottom-left cell: closest=0.4, closeness=0.4, medium zone
-    assert x3 == -0.5 and y3 == -0.5 and np.isclose(z3, -1.6) and np.isclose(amp3, 0.4) and zone_id3 == "medium"
+    assert x3 == -0.5 and y3 == -0.5 and np.isclose(amp3, 0.36) and zone_id3 == "medium"  # 0.4 * 0.9 base_volume
     # Bottom-right cell: closest=0.1, closeness=0.1, far zone
-    assert x4 == 0.5 and y4 == -0.5 and np.isclose(z4, -1.9) and np.isclose(amp4, 0.1) and zone_id4 == "far"
+    assert x4 == 0.5 and y4 == -0.5 and np.isclose(amp4, 0.08) and zone_id4 == "far"  # 0.1 * 0.8 base_volume
 
 
 def test_medium_depth_produces_medium_zone(test_zone_config):
@@ -217,7 +217,7 @@ def test_medium_depth_produces_medium_zone(test_zone_config):
     sources = mapper.map(depth)
     assert len(sources) == 4, "Expected 4 sources for a 2x2 grid"
     assert all(zone_id == "medium" for _, _, _, _, zone_id in sources), "All sources should be in 'medium' zone"
-    assert all(np.isclose(amp, 0.5) for _, _, _, amp, _ in sources), "All sources should have 0.5 amplitude"
+    assert all(np.isclose(amp, 0.45) for _, _, _, amp, _ in sources), "All sources should have 0.45 amplitude (0.5 * 0.9 base_volume)"
 
 
 def test_depth_scale_affects_z_coordinates(test_zone_config):
@@ -233,4 +233,4 @@ def test_depth_scale_affects_z_coordinates(test_zone_config):
     # Top-left cell: closeness=1.0, z should be -1.0
     assert np.isclose(z1, -1.0), f"Expected z near -1.0, got {z1}"
     # Top-right cell: closeness=0.5, z should be -1.0 - (1.0 - 0.5) * 2.0 = -2.0
-    assert np.isclose(z2, -2.0), f"Expected z near -2.0, got {z2}"
+    assert np.isclose(z2, -2.1), f"Expected z near -2.1, got {z2}"

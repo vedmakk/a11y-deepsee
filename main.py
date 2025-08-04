@@ -12,6 +12,7 @@ from audio_mapper import (
     SimpleZoneMapper,
     Grid3DZoneMapper,
     SoundZoneConfig,
+    SoundZone
 )
 from audio_output import (
     StereoAudioOutput,
@@ -60,7 +61,32 @@ def setup_audio_system(output_backend: str, inverse_depth: bool, use_natural_sou
                 raise FileNotFoundError("Audio samples directory missing")
             
             # Create sound zone configuration
-            zone_config = SoundZoneConfig.create_default_config(audio_samples_dir)
+            zone_config = SoundZoneConfig([
+                SoundZone(
+                    zone_id="far",
+                    min_closeness=0.0,
+                    max_closeness=0.4,
+                    audio_file=audio_samples_dir / "ocean.wav",
+                    base_volume=0.8,
+                    fade_distance=0.2
+                ),
+                SoundZone(
+                    zone_id="medium",
+                    min_closeness=0.3,
+                    max_closeness=0.7,
+                    audio_file=audio_samples_dir / "wind.wav",
+                    base_volume=0.3,
+                    fade_distance=0.3
+                ),
+                SoundZone(
+                    zone_id="close",
+                    min_closeness=0.6,
+                    max_closeness=1.0,
+                    audio_file=audio_samples_dir / "bees.wav",
+                    base_volume=1.0,
+                    fade_distance=0.2
+                )
+            ])
             
             # Check if required audio files exist
             missing_files = []
@@ -91,7 +117,7 @@ def setup_audio_system(output_backend: str, inverse_depth: bool, use_natural_sou
             else:  # "3d" (default)
                 mapper = Grid3DZoneMapper(
                     zone_config=zone_config,
-                    grid_size=8,
+                    grid_size=4,
                     inverse=inverse_depth
                 )
                 audio_out = OpenALZoneOutput(
@@ -167,7 +193,7 @@ def run(camera_index: int, device: str | None, output_backend: str, use_natural_
             frame_width = frame.shape[1]
 
             # Debug color mapping
-            zone_colors = zone_colors = {"ocean": (255, 0, 0), "wind": (255, 255, 0), "footsteps": (0, 0, 255)}
+            zone_colors = zone_colors = {"far": (255, 0, 0), "medium": (255, 255, 0), "close": (0, 0, 255)}
             default_color = (0, 255, 0)
 
             if debug_stereo:

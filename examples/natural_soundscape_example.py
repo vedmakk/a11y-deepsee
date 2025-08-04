@@ -43,7 +43,7 @@ def create_example_sound_config() -> SoundZoneConfig:
     
     return SoundZoneConfig([
         SoundZone(
-            zone_id="ocean",
+            zone_id="far",
             min_closeness=0.0,
             max_closeness=0.35,
             audio_file=audio_dir / "ocean.wav",
@@ -52,7 +52,7 @@ def create_example_sound_config() -> SoundZoneConfig:
             fade_distance=0.15  # Smooth fade at edges
         ),
         SoundZone(
-            zone_id="wind", 
+            zone_id="medium", 
             min_closeness=0.25,
             max_closeness=0.75,
             audio_file=audio_dir / "wind.wav", 
@@ -61,7 +61,7 @@ def create_example_sound_config() -> SoundZoneConfig:
             fade_distance=0.2
         ),
         SoundZone(
-            zone_id="footsteps",
+            zone_id="close",
             min_closeness=0.65,
             max_closeness=1.0,
             audio_file=audio_dir / "footsteps.wav",
