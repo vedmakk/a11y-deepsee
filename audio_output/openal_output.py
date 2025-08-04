@@ -14,7 +14,7 @@ try:
     from openal import oalInit, oalQuit, oalOpen, Listener  # type: ignore
 except ModuleNotFoundError as exc:  # pragma: no cover – optional dependency
     raise ImportError(
-        "PyOpenAL is required for OpenALAudioOutput. Install with `pip install openal`."
+        "PyOpenAL is required for OpenALAudioOutput. Follow the dependencies installation instructions in the README.md file."
     ) from exc
 
 from .base import AudioOutput
@@ -36,7 +36,7 @@ class OpenALAudioOutput(AudioOutput):
 
     Notes
     -----
-    • **PyOpenAL** must be available (``pip install openal``).  
+    • **PyOpenAL** must be available (Follow the dependencies installation instructions in the README.md file.).  
     • A short sine-wave sample is generated at runtime and reused for *all* sources.  The sample’s
       base frequency is 440 Hz, *pitch* controls are used to reach arbitrary frequencies.
     • Distance attenuation can be handled by OpenAL itself but, for consistency with the existing
